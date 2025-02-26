@@ -5,8 +5,29 @@ import os
 from typing import Any
 
 
+
+from resiliparse.parse.encoding import detect_encoding
+from resiliparse.extract.html2text import extract_plain_text
 def run_extract_text_from_html_bytes(html_bytes: bytes) -> str | None:
-    raise NotImplementedError
+    # Detect encoding of the byte string
+    enc = detect_encoding(html_bytes)
+    print(enc)
+
+    # Decode the byte string into a Unicode string
+    html = html_bytes.decode('utf-8')
+    print(html)
+
+    # If the encoding is not UTF-8, try to decode it using the detected encoding
+    if enc != 'utf-8':
+        try:
+            html = html_bytes.decode(enc)
+        except UnicodeDecodeError:
+            return None
+
+    # Extract text from the HTML string
+    text = extract_plain_text(html)
+
+    return text
 
 
 def run_identify_language(text: str) -> tuple[Any, float]:
