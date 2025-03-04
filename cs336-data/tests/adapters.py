@@ -33,9 +33,13 @@ def run_identify_language(text: str) -> tuple[Any, float]:
     model = fasttext.load_model('lid.176.bin')
 
     # Predict the language of the text
+    text = text.replace('\n', ' ') # Remove newlines
     predictions = model.predict(text, k=1) # k=1 means we only want the top prediction
 
-    return (predictions[0][0], predictions[1][0]) # Return the language code and the confidence score
+    predicted_language = predictions[0][0].replace('__label__', '') # Remove the '__label__' prefix
+    confidence_score = predictions[1][0]
+
+    return (predicted_language, confidence_score) # Return the language code and the confidence score
 
 
 def run_mask_emails(text: str) -> tuple[str, int]:
