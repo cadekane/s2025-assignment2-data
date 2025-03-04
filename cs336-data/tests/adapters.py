@@ -5,7 +5,6 @@ import os
 from typing import Any
 
 
-
 from resiliparse.parse.encoding import detect_encoding
 from resiliparse.extract.html2text import extract_plain_text
 def run_extract_text_from_html_bytes(html_bytes: bytes) -> str | None:
@@ -29,9 +28,14 @@ def run_extract_text_from_html_bytes(html_bytes: bytes) -> str | None:
 
     return text
 
-
+import fasttext
 def run_identify_language(text: str) -> tuple[Any, float]:
-    raise NotImplementedError
+    model = fasttext.load_model('lid.176.bin')
+
+    # Predict the language of the text
+    predictions = model.predict(text, k=1) # k=1 means we only want the top prediction
+
+    return (predictions[0][0], predictions[1][0]) # Return the language code and the confidence score
 
 
 def run_mask_emails(text: str) -> tuple[str, int]:
