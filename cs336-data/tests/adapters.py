@@ -101,7 +101,17 @@ def run_classify_nsfw(text: str) -> tuple[Any, float]:
 
 
 def run_classify_toxic_speech(text: str) -> tuple[Any, float]:
-    raise NotImplementedError
+    model = fasttext.load_model('jigsaw_fasttext_bigrams_hatespeech_final.bin')
+
+    # Predict the probability of the text being NSFW
+    text = text.replace('\n', ' ') # Remove newlines
+
+    predictions = model.predict(text, k=1) # k=1 means we only want the top prediction
+
+    predicted_speech = predictions[0][0].replace('__label__', '') # Remove the '__label__' prefix
+    confidence_score = predictions[1][0]
+
+    return (predicted_speech, confidence_score) # Return the language code and the confidence score
 
 
 def run_classify_quality(text: str) -> tuple[Any, float]:
