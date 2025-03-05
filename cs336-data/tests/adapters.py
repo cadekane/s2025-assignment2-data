@@ -43,7 +43,18 @@ def run_identify_language(text: str) -> tuple[Any, float]:
 
 
 def run_mask_emails(text: str) -> tuple[str, int]:
-    raise NotImplementedError
+    import re
+
+    # Define the regular expression pattern for email addresses
+    email_pattern = r'[\w\.-]+@[\w\.-]+'
+
+    # Find all email addresses in the text
+    emails = re.findall(email_pattern, text)
+
+    # Replace each email address with a placeholder
+    masked_text = re.sub(email_pattern, '|||EMAIL|||', text)
+
+    return (masked_text, len(emails)) # returns the masked string and the number of emails found that were masked
 
 
 def run_mask_phone_numbers(text: str) -> tuple[str, int]:
