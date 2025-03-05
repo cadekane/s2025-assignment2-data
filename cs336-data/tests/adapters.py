@@ -62,7 +62,7 @@ def run_mask_phone_numbers(text: str) -> tuple[str, int]:
 
     # Define the regular expression pattern for phone numbers
     # phone_pattern = r'\b\d{3}[-.]?\d{3}[-.]?\d{4}\b'
-    phone_pattern = r'(\+\d{1,2}\s)?\(?\d{3}\)?[\s.-]\d{3}[\s.-]\d{4}'
+    phone_pattern = r'(\+\d{1,2}\s)?\(?\d{3}\)?[\s.-]?\d{3}[\s.-]?\d{4}'
 
     # Find all phone numbers in the text
     phones = re.findall(phone_pattern, text)
