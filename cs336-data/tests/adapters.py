@@ -74,7 +74,16 @@ def run_mask_phone_numbers(text: str) -> tuple[str, int]:
 
 
 def run_mask_ips(text: str) -> tuple[str, int]:
-    raise NotImplementedError
+    import re
+
+    # Define the regular expression pattern for IP addresses
+    ip_pattern = r'\b(?:\d{1,3}\.){3}\d{1,3}\b' # for IPv4 addresses
+
+    ips = re.findall(ip_pattern, text)
+
+    masked_test = re.sub(ip_pattern, '|||IP_ADDRESS|||', text)
+
+    return (masked_test, len(ips))
 
 
 def run_classify_nsfw(text: str) -> tuple[Any, float]:
