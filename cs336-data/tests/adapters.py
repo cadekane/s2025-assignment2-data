@@ -52,13 +52,25 @@ def run_mask_emails(text: str) -> tuple[str, int]:
     emails = re.findall(email_pattern, text)
 
     # Replace each email address with a placeholder
-    masked_text = re.sub(email_pattern, '|||EMAIL|||', text)
+    masked_text = re.sub(email_pattern, '|||EMAIL_ADDRESS|||', text)
 
     return (masked_text, len(emails)) # returns the masked string and the number of emails found that were masked
 
 
 def run_mask_phone_numbers(text: str) -> tuple[str, int]:
-    raise NotImplementedError
+    import re
+
+    # Define the regular expression pattern for phone numbers
+    # phone_pattern = r'\b\d{3}[-.]?\d{3}[-.]?\d{4}\b'
+    phone_pattern = r'(\+\d{1,2}\s)?\(?\d{3}\)?[\s.-]\d{3}[\s.-]\d{4}'
+
+    # Find all phone numbers in the text
+    phones = re.findall(phone_pattern, text)
+
+    # Replace each phone number with a placeholder
+    masked_text = re.sub(phone_pattern, '|||PHONE_NUMBER|||', text)
+
+    return (masked_text, len(phones)) # returns the masked string and the number of phone numbers found that were masked
 
 
 def run_mask_ips(text: str) -> tuple[str, int]:
