@@ -119,7 +119,32 @@ def run_classify_quality(text: str) -> tuple[Any, float]:
 
 
 def run_gopher_quality_filter(text: str) -> bool:
-    raise NotImplementedError
+    # Tokenize the text into words
+    words = nltk.word_tokenize(text)
+
+    # Filter out documents that contain less than 50 or more than 100,000 words
+    if len(words) < 50 or len(words) > 100000:
+        return False
+
+    # Calculate the mean word length and filter out if it is outside the range of 3 to 10 characters
+    avg_word_length = sum(len(word) for word in words) / len(words) if len(words) > 0 else 0
+    if avg_word_length < 3 or avg_word_length > 10:
+        return False
+
+    # Filter out documents that have more than 30% of lines ending with an ellipsis
+    lines = text.split('\n')
+    ellipsis_count = sum(line.endswith('...') for line in lines)
+    ellipsis_ratio = ellipsis_count / len(lines) if len(lines) > 0 else 0
+    if ellipsis_ratio > 0.3:
+        return False
+
+    # Filter out documents that contain less than 80% of words with at least one alphabetic character
+    alpha_word_count = sum(any(c.isalpha() for c in word) for word in words)
+    alpha_ratio = alpha_word_count / len(words) if len(words) > 0 else 0
+    if alpha_ratio < 0.8:
+        return False
+
+    return True  # Passes all filters
 
 
 def run_exact_line_deduplication(
