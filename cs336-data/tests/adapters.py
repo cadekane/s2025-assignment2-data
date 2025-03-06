@@ -118,7 +118,7 @@ def run_classify_quality(text: str) -> tuple[Any, float]:
     raise NotImplementedError
 
 import nltk
-nltk.download('punkt')  # Ensure tokenizer is available
+nltk.download('punkt_tab')  # Ensure tokenizer is available
 def run_gopher_quality_filter(text: str) -> bool:
     # Tokenize the text into words
     words = nltk.word_tokenize(text)
