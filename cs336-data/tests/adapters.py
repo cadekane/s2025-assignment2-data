@@ -151,7 +151,28 @@ def run_gopher_quality_filter(text: str) -> bool:
 def run_exact_line_deduplication(
     input_files: list[os.PathLike], output_directory: os.PathLike
 ):
-    raise NotImplementedError
+    # Ensure the output directory exists and make it if it doesn't
+    os.makedirs(output_directory, exist_ok=True)
+
+    # First pass: Count frequency of each line, using the hash of the line as the key
+    line_counts = {}
+    for path in input_paths:
+        with open(path, 'r') as file:
+            for line in file:
+                # Compute the hash of the line
+                line_hash = hash(line) # hash() function computes a hash value of the input
+                line_counts[line_hash] = line_counts.get(line_hash, 0) + 1
+    
+    # Second pass: write each file's unique lines (those with FREQUENCY 1) to the output directory
+    for path in input_paths:
+        # Preserve the file name in the output directory
+        output_path = os.path.join(output_directory, os.path.basename(path))
+        with open(path, 'r') as file, open(output_path, 'w') as output_file:
+            for line in file:
+                line_hash = hash(line)
+                # Only write the line if it occurs exactly once in the whole corpus.
+                if line_counts[line_hash] == 1:
+                    output_file.write(line)
 
 
 def run_minhash_deduplication(
