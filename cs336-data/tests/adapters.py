@@ -156,7 +156,7 @@ def run_exact_line_deduplication(
 
     # First pass: Count frequency of each line, using the hash of the line as the key
     line_counts = {}
-    for path in input_paths:
+    for path in input_files:
         with open(path, 'r') as file:
             for line in file:
                 # Compute the hash of the line
@@ -164,7 +164,7 @@ def run_exact_line_deduplication(
                 line_counts[line_hash] = line_counts.get(line_hash, 0) + 1
     
     # Second pass: write each file's unique lines (those with FREQUENCY 1) to the output directory
-    for path in input_paths:
+    for path in input_files:
         # Preserve the file name in the output directory
         output_path = os.path.join(output_directory, os.path.basename(path))
         with open(path, 'r') as file, open(output_path, 'w') as output_file:
