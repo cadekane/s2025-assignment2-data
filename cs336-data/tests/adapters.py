@@ -174,7 +174,10 @@ def run_exact_line_deduplication(
                 if line_counts[line_hash] == 1:
                     output_file.write(line)
 
-
+import os
+import nltk
+import mmh3
+from nltk import word_tokenize
 def run_minhash_deduplication(
     input_files: list[os.PathLike],
     num_hashes: int,
@@ -183,4 +186,216 @@ def run_minhash_deduplication(
     jaccard_threshold: float,
     output_directory: os.PathLike,
 ):
-    raise NotImplementedError
+    # 1. Compute minhash signatures for each document
+    minhash_signatures = {}
+
+    for path in input_files:
+        with open(path, 'r') as file:
+            text = file.read()
+            minhash_signatures[path] = compute_minhash_signature(text, num_hashes, ngrams) # finished but unsure if works
+
+    # 2. Use LSH with the provided # of bands to identify candidate duplicates
+    candidate_pairs = lsh(minhash_signatures, num_bands) # unfinished
+
+    # 3. Compute Jaccard similarity for candidate pairs and cluster pairs with common documents, such as pair AB and BC into ABC
+    filtered_pairs = filter_duplicate_pairs(candidate_pairs, ngrams, jaccard_threshold)
+    clusters = cluster_documents(filtered_pairs, ngrams, jaccard_threshold)
+
+    # 4. Remove a random document from each duplicate cluster and write the remaining documents to the output directory
+    for cluster in clusters:
+        # Choose a random document to discard
+        discard_doc = random.choice(cluster)
+        # Write the remaining documents to the output directory, with the same file name
+        for doc in cluster:
+            if doc != discard_doc:
+                output_path = os.path.join(output_directory, os.path.basename(doc))
+                shutil.copy(doc, output_path)
+
+# Helper functions
+
+# 1. Minhash signature computation
+
+import nltk
+from nltk import word_tokenize
+
+def compute_minhash_signature(text: str, num_hashes: int, ngrams: int) -> list[int]:
+    # Tokenize the text into n-grams
+    n_grams = set(nltk.ngrams(word_tokenize(text), n=ngrams)) # n number of n-grams? 
+
+    # Initialize the signature with infinity for each hash function
+    signature = [float('inf')] * num_hashes
+
+    # Generate hash functions
+    hash_funcs = generate_hash_functions(num_hashes) # k hash functions
+
+    # Is this correct? I'm not sure if hash func for loop should be outside the n_gram for loop
+    # Update the signature for each n-gram
+    for n_gram in n_grams:
+        n_gram_str = ' '.join(n_gram) # Convert tuple back to string for hashing
+        for i, hash_func in enumerate(hash_funcs):
+            hash_val = hash_func(n_gram_str)
+            signature[i] = min(signature[i], hash_val)
+    
+    return signature # size = num_hashes
+
+def generate_hash_functions(num_hashes: int):
+    return [generate_hash_function(seed) for seed in range(num_hashes)]
+
+# Maybe use mmh3 instead of the hash function in python
+def generate_hash_function(seed: int):
+    # Generate a hash function using the given seed
+    def hash_func(n_gram):
+        return hash(n_gram) ^ seed
+    return hash_func
+
+# def generate_hash_function(seed: int):
+#     def hash_func(n_gram):
+#         return mmh3.hash(n_gram, seed)
+#     return hash_func
+
+# 2. Locality-Sensitive Hashing (LSH)
+
+from collections import defaultdict
+from itertools import combinations
+
+def lsh(minhash_signatures: dict, num_bands: int, num_hashes: int) -> set:
+    """
+    Given a dictionary mapping document IDs (or file names) to their MinHash signatures,
+    this function splits each signature into `num_bands` and buckets documents that share the
+    same band signature. If two documents share a band, they are added as a candidate pair.
+
+    Args:
+        minhash_signatures (dict): A mapping from document ID to its MinHash signature (list of ints).
+        num_bands (int): The number of bands to split each signature into.
+
+    Returns:
+        set: A set of tuples, each tuple containing a pair of document IDs that are candidate duplicates.
+    """
+    buckets = defaultdict(list)
+    candidate_pairs = set()
+    
+    # Assuming all signatures are of equal length.
+    # sample_signature = next(iter(minhash_signatures.values()))
+    # sig_length = len(sample_signature)
+    sig_length = num_hashes # num_hashes is the length of the signature
+    band_size = sig_length // num_bands
+    # Note: This assumes sig_length is exactly divisible by num_bands.
+    
+    # Process each document and its signature.
+    for doc_id, signature in minhash_signatures.items():
+        for band in range(num_bands):
+            start = band * band_size
+            end = start + band_size
+            # Create a tuple that represents the signature for this band.
+            band_signature = tuple(signature[start:end])
+            # Use a combination of band index and band_signature as the bucket key.
+            buckets[(band, band_signature)].append(doc_id) # doc_id is really just the path
+    
+    # For each bucket, any documents sharing the same band are candidate duplicates.
+    for docs in buckets.values():
+        if len(docs) > 1:
+            # Generate all unique pairs from the documents in this bucket.
+            for pair in combinations(sorted(docs), 2): # combinations returns all unique pairs
+                candidate_pairs.add(pair)
+    
+    return candidate_pairs
+
+# 3. Jacard similarity computation and filtering, and clustering
+
+from nltk import word_tokenize, ngrams
+
+def compute_jaccard_similarity(file1: os.PathLike, file2: os.PathLike, n: int) -> float:
+    """Computes the Jaccard similarity between two documents based on n-grams."""
+    
+    def get_ngrams_from_file(file_path, n):
+        with open(file_path, 'r', encoding='utf-8') as file:
+            text = file.read()
+            tokens = word_tokenize(text)
+            return set(ngrams(tokens, n))
+
+    ngrams1 = get_ngrams_from_file(file1, n)
+    ngrams2 = get_ngrams_from_file(file2, n)
+    
+    intersection = len(ngrams1 & ngrams2)  # Intersection
+    union = len(ngrams1 | ngrams2)        # Union
+    
+    return intersection / union if union != 0 else 0.0
+
+from collections import defaultdict
+from itertools import combinations
+
+def filter_duplicate_pairs(candidate_pairs, n, threshold):
+    """
+    Filters candidate pairs based on Jaccard similarity threshold.
+    
+    Args:
+        candidate_pairs (set): Candidate pairs identified by LSH.
+        n (int): N-gram size for Jaccard similarity.
+        threshold (float): Jaccard similarity threshold.
+
+    Returns:
+        list: Filtered pairs that exceed the similarity threshold.
+    """
+    duplicates = []
+    
+    for file1, file2 in candidate_pairs:
+        similarity = compute_jaccard_similarity(file1, file2, n)
+        
+        if similarity >= threshold:
+            duplicates.append((file1, file2))
+    
+    return duplicates
+
+
+class UnionFind:
+    def __init__(self):
+        self.parent = {}
+        
+    def find(self, doc):
+        if self.parent[doc] != doc:
+            self.parent[doc] = self.find(self.parent[doc])  # Path compression
+        return self.parent[doc]
+    
+    def union(self, doc1, doc2):
+        root1 = self.find(doc1)
+        root2 = self.find(doc2)
+        
+        if root1 != root2:
+            self.parent[root2] = root1  # Union the two clusters
+    
+    def add(self, doc):
+        if doc not in self.parent:
+            self.parent[doc] = doc  # Initialize itself as its own root
+    
+    def get_clusters(self):
+        clusters = {}
+        for doc in self.parent:
+            root = self.find(doc)
+            if root not in clusters:
+                clusters[root] = []
+            clusters[root].append(doc)
+        return list(clusters.values())
+
+def cluster_documents(candidate_pairs, n, threshold):
+    """
+    Clusters documents that exceed the Jaccard similarity threshold using Union-Find.
+
+    Args:
+        candidate_pairs (set): Candidate pairs identified by LSH.
+        n (int): N-gram size for Jaccard similarity.
+        threshold (float): Jaccard similarity threshold.
+
+    Returns:
+        list: A list of clusters (each cluster is a list of file paths).
+    """
+    duplicates = filter_duplicate_pairs(candidate_pairs, n, threshold)
+    
+    # Union-Find to cluster documents
+    uf = UnionFind()
+    
+    for file1, file2 in duplicates:
+        uf.add(file1)
+        uf.add(file2)
+        uf.union(file1, file2)
+    
+    return uf.get_clusters()
