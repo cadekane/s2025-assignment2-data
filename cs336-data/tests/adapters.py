@@ -239,6 +239,7 @@ def compute_minhash_signature(text: str, num_hashes: int, ngrams: int) -> list[i
             hash_val = hash_func(n_gram_str)
             signature[i] = min(signature[i], hash_val)
     
+    print(signature)
     return signature # size = num_hashes
 
 def generate_hash_functions(num_hashes: int):
