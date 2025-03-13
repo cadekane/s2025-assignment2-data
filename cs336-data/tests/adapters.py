@@ -199,10 +199,14 @@ def run_minhash_deduplication(
 
     # 2. Use LSH with the provided # of bands to identify candidate duplicates
     candidate_pairs = lsh(minhash_signatures, num_bands, num_hashes) # unfinished
+    print(candidate_pairs)
 
     # 3. Compute Jaccard similarity for candidate pairs and cluster pairs with common documents, such as pair AB and BC into ABC
     filtered_pairs = filter_duplicate_pairs(candidate_pairs, ngrams, jaccard_threshold)
     clusters = cluster_documents(filtered_pairs, ngrams, jaccard_threshold)
+
+    print(filtered_pairs)
+    print(clusters)
 
     # 4. Remove a random document from each duplicate cluster and write the remaining documents to the output directory
     for cluster in clusters:
@@ -301,10 +305,9 @@ def lsh(minhash_signatures: dict, num_bands: int, num_hashes: int) -> set:
             for pair in combinations(sorted(docs), 2): # combinations returns all unique pairs
                 candidate_pairs.add(pair)
     
-    print(candidate_pairs)
     return candidate_pairs
 
-# 3. Jacard similarity computation and filtering, and clustering
+# 3. Jaccard similarity computation and filtering, and clustering
 
 from nltk import word_tokenize, ngrams
 
