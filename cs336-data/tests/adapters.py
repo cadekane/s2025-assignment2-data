@@ -343,7 +343,7 @@ def filter_duplicate_pairs(candidate_pairs, n, threshold):
     
     for file1, file2 in candidate_pairs:
         similarity = compute_jaccard_similarity(file1, file2, n)
-        
+        print(f"Comparing {file1} and {file2}: Jaccard similarity = {similarity}")
         if similarity >= threshold:
             duplicates.append((file1, file2))
     
