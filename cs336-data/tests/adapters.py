@@ -178,6 +178,7 @@ import os
 import nltk
 import mmh3
 from nltk import word_tokenize
+import random
 def run_minhash_deduplication(
     input_files: list[os.PathLike],
     num_hashes: int,
