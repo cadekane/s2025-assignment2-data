@@ -348,6 +348,7 @@ def filter_duplicate_pairs(candidate_pairs, n, threshold):
         if similarity >= threshold:
             duplicates.append((file1, file2))
     
+    print("duplicates: ", duplicates)
     return duplicates
 
 
