@@ -208,15 +208,18 @@ def run_minhash_deduplication(
     print(filtered_pairs)
     print(clusters)
 
-    # 4. Remove a random document from each duplicate cluster and write the remaining documents to the output directory
+    # 4. Create a set of documents to discard (one from each duplicate cluster)
+    documents_to_discard = set()
     for cluster in clusters:
-        # Choose a random document to discard
+        # Choose a random document to discard from each cluster
         discard_doc = random.choice(cluster)
-        # Write the remaining documents to the output directory, with the same file name
-        for doc in cluster:
-            if doc != discard_doc:
-                output_path = os.path.join(output_directory, os.path.basename(doc))
-                shutil.copy(doc, output_path)
+        documents_to_discard.add(discard_doc)
+    
+    # 5. Write all documents that are not in the discard set to the output directory
+    for doc in input_files:
+        if doc not in documents_to_discard:
+            output_path = os.path.join(output_directory, os.path.basename(doc))
+            shutil.copy(doc, output_path)
 
 # Helper functions
 
