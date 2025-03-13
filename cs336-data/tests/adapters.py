@@ -195,7 +195,7 @@ def run_minhash_deduplication(
             minhash_signatures[path] = compute_minhash_signature(text, num_hashes, ngrams) # finished but unsure if works
 
     # 2. Use LSH with the provided # of bands to identify candidate duplicates
-    candidate_pairs = lsh(minhash_signatures, num_bands) # unfinished
+    candidate_pairs = lsh(minhash_signatures, num_bands, num_hashes) # unfinished
 
     # 3. Compute Jaccard similarity for candidate pairs and cluster pairs with common documents, such as pair AB and BC into ABC
     filtered_pairs = filter_duplicate_pairs(candidate_pairs, ngrams, jaccard_threshold)
