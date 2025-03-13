@@ -301,6 +301,7 @@ def lsh(minhash_signatures: dict, num_bands: int, num_hashes: int) -> set:
             for pair in combinations(sorted(docs), 2): # combinations returns all unique pairs
                 candidate_pairs.add(pair)
     
+    print(candidate_pairs)
     return candidate_pairs
 
 # 3. Jacard similarity computation and filtering, and clustering
