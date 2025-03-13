@@ -180,6 +180,7 @@ import mmh3
 from nltk import word_tokenize
 import random
 import shutil
+import mmh3
 def run_minhash_deduplication(
     input_files: list[os.PathLike],
     num_hashes: int,
@@ -244,16 +245,16 @@ def generate_hash_functions(num_hashes: int):
     return [generate_hash_function(seed) for seed in range(num_hashes)]
 
 # Maybe use mmh3 instead of the hash function in python
-def generate_hash_function(seed: int):
-    # Generate a hash function using the given seed
-    def hash_func(n_gram):
-        return hash(n_gram) ^ seed
-    return hash_func
-
 # def generate_hash_function(seed: int):
+#     # Generate a hash function using the given seed
 #     def hash_func(n_gram):
-#         return mmh3.hash(n_gram, seed)
+#         return hash(n_gram) ^ seed
 #     return hash_func
+
+def generate_hash_function(seed: int):
+    def hash_func(n_gram):
+        return mmh3.hash(n_gram, seed)
+    return hash_func
 
 # 2. Locality-Sensitive Hashing (LSH)
 
