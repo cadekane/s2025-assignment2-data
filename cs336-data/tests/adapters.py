@@ -37,7 +37,10 @@ def run_identify_language(text: str) -> tuple[Any, float]:
     predictions = model.predict(text, k=1) # k=1 means we only want the top prediction
 
     predicted_language = predictions[0][0].replace('__label__', '') # Remove the '__label__' prefix
-    confidence_score = predictions[1][0]
+    # confidence_score = predictions[1][0]
+
+    # Fix the NumPy error by ensuring correct array conversion
+    confidence_score = np.asarray(predictions[1])[0]
 
     return (predicted_language, confidence_score) # Return the language code and the confidence score
 
@@ -114,8 +117,29 @@ def run_classify_toxic_speech(text: str) -> tuple[Any, float]:
     return (predicted_speech, confidence_score) # Return the language code and the confidence score
 
 
-def run_classify_quality(text: str) -> tuple[Any, float]:
-    raise NotImplementedError
+import fasttext
+from typing import Any, Tuple
+
+def run_classify_quality(text: str) -> Tuple[Any, float]:
+    """Classifies text as high or low quality using a trained fastText model."""
+    
+    # Load the trained quality classification model
+    model = fasttext.load_model('quality_classification.bin')  
+
+    # Preprocess the text (remove newlines to ensure proper input format)
+    text = text.replace('\n', ' ')  
+
+    # Predict the quality of the text (k=1 ensures we get the most probable label)
+    predictions = model.predict(text, k=1)  
+
+    # Extract label (remove '__label__' prefix)
+    predicted_quality = predictions[0][0].replace('__label__', '')  
+
+    # Extract confidence score
+    confidence_score = predictions[1][0]  
+
+    return predicted_quality, confidence_score  # Return label and confidence score
+
 
 import nltk
 nltk.download('punkt_tab')  # Ensure tokenizer is available
