@@ -124,7 +124,7 @@ def run_classify_quality(text: str) -> Tuple[Any, float]:
     """Classifies text as high or low quality using a trained fastText model."""
 
     # Train the quality classification model
-    model = fasttext.train_supervised("cs336-data/cs336_data/quality_train_1428-10000.txt")
+    model = fasttext.train_supervised("cs336-data/cs336_data/quality_train_1428-2000.txt")
     
     # Load the trained quality classification model
     # model = fasttext.load_model('../quality_classifier.bin')  
