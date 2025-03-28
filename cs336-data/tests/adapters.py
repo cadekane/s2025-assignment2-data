@@ -122,12 +122,15 @@ from typing import Any, Tuple
 
 def run_classify_quality(text: str) -> Tuple[Any, float]:
     """Classifies text as high or low quality using a trained fastText model."""
+
+    # Train the quality classification model
+    model = fasttext.train_supervised("cs336-data/cs336_data/quality_train_1428-10000.txt")
     
     # Load the trained quality classification model
-    model = fasttext.load_model('quality_classification.bin')  
+    # model = fasttext.load_model('../quality_classifier.bin')  
 
     # Preprocess the text (remove newlines to ensure proper input format)
-    text = text.replace('\n', ' ')  
+    text = text.replace('\n', ' ') 
 
     # Predict the quality of the text (k=1 ensures we get the most probable label)
     predictions = model.predict(text, k=1)  
