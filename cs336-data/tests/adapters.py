@@ -29,6 +29,7 @@ def run_extract_text_from_html_bytes(html_bytes: bytes) -> str | None:
     return text
 
 import fasttext
+import numpy as np
 def run_identify_language(text: str) -> tuple[Any, float]:
     model = fasttext.load_model('lid.176.bin')
 
